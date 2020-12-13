@@ -8,7 +8,6 @@ import (
 	"errors"
 	"strconv"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -44,7 +43,7 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
-	IPAddress struct {
+	IPDetails struct {
 		CreatedAt    func(childComplexity int) int
 		IPAddress    func(childComplexity int) int
 		ResponseCode func(childComplexity int) int
@@ -53,19 +52,19 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
-		Enqueue func(childComplexity int, ip []*model.NewIP) int
+		Enqueue func(childComplexity int, ip []string) int
 	}
 
 	Query struct {
-		Ips func(childComplexity int) int
+		GetIPDetails func(childComplexity int, ip string) int
 	}
 }
 
 type MutationResolver interface {
-	Enqueue(ctx context.Context, ip []*model.NewIP) ([]*model.IPAddress, error)
+	Enqueue(ctx context.Context, ip []string) (*bool, error)
 }
 type QueryResolver interface {
-	Ips(ctx context.Context) ([]*model.IPAddress, error)
+	GetIPDetails(ctx context.Context, ip string) (*model.IPDetails, error)
 }
 
 type executableSchema struct {
@@ -83,40 +82,40 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 	_ = ec
 	switch typeName + "." + field {
 
-	case "IPAddress.created_at":
-		if e.complexity.IPAddress.CreatedAt == nil {
+	case "IPDetails.created_at":
+		if e.complexity.IPDetails.CreatedAt == nil {
 			break
 		}
 
-		return e.complexity.IPAddress.CreatedAt(childComplexity), true
+		return e.complexity.IPDetails.CreatedAt(childComplexity), true
 
-	case "IPAddress.ip_address":
-		if e.complexity.IPAddress.IPAddress == nil {
+	case "IPDetails.ip_address":
+		if e.complexity.IPDetails.IPAddress == nil {
 			break
 		}
 
-		return e.complexity.IPAddress.IPAddress(childComplexity), true
+		return e.complexity.IPDetails.IPAddress(childComplexity), true
 
-	case "IPAddress.response_code":
-		if e.complexity.IPAddress.ResponseCode == nil {
+	case "IPDetails.response_code":
+		if e.complexity.IPDetails.ResponseCode == nil {
 			break
 		}
 
-		return e.complexity.IPAddress.ResponseCode(childComplexity), true
+		return e.complexity.IPDetails.ResponseCode(childComplexity), true
 
-	case "IPAddress.uuid":
-		if e.complexity.IPAddress.UUID == nil {
+	case "IPDetails.uuid":
+		if e.complexity.IPDetails.UUID == nil {
 			break
 		}
 
-		return e.complexity.IPAddress.UUID(childComplexity), true
+		return e.complexity.IPDetails.UUID(childComplexity), true
 
-	case "IPAddress.updated_at":
-		if e.complexity.IPAddress.UpdatedAt == nil {
+	case "IPDetails.updated_at":
+		if e.complexity.IPDetails.UpdatedAt == nil {
 			break
 		}
 
-		return e.complexity.IPAddress.UpdatedAt(childComplexity), true
+		return e.complexity.IPDetails.UpdatedAt(childComplexity), true
 
 	case "Mutation.enqueue":
 		if e.complexity.Mutation.Enqueue == nil {
@@ -128,14 +127,19 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.Enqueue(childComplexity, args["ip"].([]*model.NewIP)), true
+		return e.complexity.Mutation.Enqueue(childComplexity, args["ip"].([]string)), true
 
-	case "Query.ips":
-		if e.complexity.Query.Ips == nil {
+	case "Query.getIPDetails":
+		if e.complexity.Query.GetIPDetails == nil {
 			break
 		}
 
-		return e.complexity.Query.Ips(childComplexity), true
+		args, err := ec.field_Query_getIPDetails_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.GetIPDetails(childComplexity, args["ip"].(string)), true
 
 	}
 	return 0, false
@@ -203,7 +207,7 @@ func (ec *executionContext) introspectType(name string) (*introspection.Type, er
 var sources = []*ast.Source{
 	{Name: "graph/schema.graphqls", Input: `scalar Time
 
-type IPAddress {
+type IPDetails {
   uuid: ID!
   created_at: Time!
   updated_at: Time!
@@ -212,16 +216,11 @@ type IPAddress {
 }
 
 type Query {
-  ips: [IPAddress!]!
-}
-
-input NewIP {
-  response_code: String!
-  ip_address: String!
+  getIPDetails(ip: String!): IPDetails
 }
 
 type Mutation {
-  enqueue(ip: [NewIP!]!): [IPAddress!]
+  enqueue(ip: [String!]!): Boolean
 }
 `, BuiltIn: false},
 }
@@ -234,10 +233,10 @@ var parsedSchema = gqlparser.MustLoadSchema(sources...)
 func (ec *executionContext) field_Mutation_enqueue_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
-	var arg0 []*model.NewIP
+	var arg0 []string
 	if tmp, ok := rawArgs["ip"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ip"))
-		arg0, err = ec.unmarshalNNewIP2ᚕᚖgithubᚗcomᚋbrandonforsterᚋresolverᚋgraphᚋmodelᚐNewIPᚄ(ctx, tmp)
+		arg0, err = ec.unmarshalNString2ᚕstringᚄ(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -258,6 +257,21 @@ func (ec *executionContext) field_Query___type_args(ctx context.Context, rawArgs
 		}
 	}
 	args["name"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_getIPDetails_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["ip"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ip"))
+		arg0, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["ip"] = arg0
 	return args, nil
 }
 
@@ -299,7 +313,7 @@ func (ec *executionContext) field___Type_fields_args(ctx context.Context, rawArg
 
 // region    **************************** field.gotpl *****************************
 
-func (ec *executionContext) _IPAddress_uuid(ctx context.Context, field graphql.CollectedField, obj *model.IPAddress) (ret graphql.Marshaler) {
+func (ec *executionContext) _IPDetails_uuid(ctx context.Context, field graphql.CollectedField, obj *model.IPDetails) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -307,7 +321,7 @@ func (ec *executionContext) _IPAddress_uuid(ctx context.Context, field graphql.C
 		}
 	}()
 	fc := &graphql.FieldContext{
-		Object:     "IPAddress",
+		Object:     "IPDetails",
 		Field:      field,
 		Args:       nil,
 		IsMethod:   false,
@@ -334,7 +348,7 @@ func (ec *executionContext) _IPAddress_uuid(ctx context.Context, field graphql.C
 	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _IPAddress_created_at(ctx context.Context, field graphql.CollectedField, obj *model.IPAddress) (ret graphql.Marshaler) {
+func (ec *executionContext) _IPDetails_created_at(ctx context.Context, field graphql.CollectedField, obj *model.IPDetails) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -342,7 +356,7 @@ func (ec *executionContext) _IPAddress_created_at(ctx context.Context, field gra
 		}
 	}()
 	fc := &graphql.FieldContext{
-		Object:     "IPAddress",
+		Object:     "IPDetails",
 		Field:      field,
 		Args:       nil,
 		IsMethod:   false,
@@ -369,7 +383,7 @@ func (ec *executionContext) _IPAddress_created_at(ctx context.Context, field gra
 	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _IPAddress_updated_at(ctx context.Context, field graphql.CollectedField, obj *model.IPAddress) (ret graphql.Marshaler) {
+func (ec *executionContext) _IPDetails_updated_at(ctx context.Context, field graphql.CollectedField, obj *model.IPDetails) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -377,7 +391,7 @@ func (ec *executionContext) _IPAddress_updated_at(ctx context.Context, field gra
 		}
 	}()
 	fc := &graphql.FieldContext{
-		Object:     "IPAddress",
+		Object:     "IPDetails",
 		Field:      field,
 		Args:       nil,
 		IsMethod:   false,
@@ -404,7 +418,7 @@ func (ec *executionContext) _IPAddress_updated_at(ctx context.Context, field gra
 	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _IPAddress_response_code(ctx context.Context, field graphql.CollectedField, obj *model.IPAddress) (ret graphql.Marshaler) {
+func (ec *executionContext) _IPDetails_response_code(ctx context.Context, field graphql.CollectedField, obj *model.IPDetails) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -412,7 +426,7 @@ func (ec *executionContext) _IPAddress_response_code(ctx context.Context, field 
 		}
 	}()
 	fc := &graphql.FieldContext{
-		Object:     "IPAddress",
+		Object:     "IPDetails",
 		Field:      field,
 		Args:       nil,
 		IsMethod:   false,
@@ -439,7 +453,7 @@ func (ec *executionContext) _IPAddress_response_code(ctx context.Context, field 
 	return ec.marshalNString2string(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _IPAddress_ip_address(ctx context.Context, field graphql.CollectedField, obj *model.IPAddress) (ret graphql.Marshaler) {
+func (ec *executionContext) _IPDetails_ip_address(ctx context.Context, field graphql.CollectedField, obj *model.IPDetails) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -447,7 +461,7 @@ func (ec *executionContext) _IPAddress_ip_address(ctx context.Context, field gra
 		}
 	}()
 	fc := &graphql.FieldContext{
-		Object:     "IPAddress",
+		Object:     "IPDetails",
 		Field:      field,
 		Args:       nil,
 		IsMethod:   false,
@@ -499,7 +513,7 @@ func (ec *executionContext) _Mutation_enqueue(ctx context.Context, field graphql
 	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().Enqueue(rctx, args["ip"].([]*model.NewIP))
+		return ec.resolvers.Mutation().Enqueue(rctx, args["ip"].([]string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -508,12 +522,12 @@ func (ec *executionContext) _Mutation_enqueue(ctx context.Context, field graphql
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.([]*model.IPAddress)
+	res := resTmp.(*bool)
 	fc.Result = res
-	return ec.marshalOIPAddress2ᚕᚖgithubᚗcomᚋbrandonforsterᚋresolverᚋgraphᚋmodelᚐIPAddressᚄ(ctx, field.Selections, res)
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) _Query_ips(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+func (ec *executionContext) _Query_getIPDetails(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	defer func() {
 		if r := recover(); r != nil {
 			ec.Error(ctx, ec.Recover(ctx, r))
@@ -529,23 +543,27 @@ func (ec *executionContext) _Query_ips(ctx context.Context, field graphql.Collec
 	}
 
 	ctx = graphql.WithFieldContext(ctx, fc)
+	rawArgs := field.ArgumentMap(ec.Variables)
+	args, err := ec.field_Query_getIPDetails_args(ctx, rawArgs)
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	fc.Args = args
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().Ips(rctx)
+		return ec.resolvers.Query().GetIPDetails(rctx, args["ip"].(string))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.([]*model.IPAddress)
+	res := resTmp.(*model.IPDetails)
 	fc.Result = res
-	return ec.marshalNIPAddress2ᚕᚖgithubᚗcomᚋbrandonforsterᚋresolverᚋgraphᚋmodelᚐIPAddressᚄ(ctx, field.Selections, res)
+	return ec.marshalOIPDetails2ᚖgithubᚗcomᚋbrandonforsterᚋresolverᚋgraphᚋmodelᚐIPDetails(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _Query___type(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
@@ -1706,34 +1724,6 @@ func (ec *executionContext) ___Type_ofType(ctx context.Context, field graphql.Co
 
 // region    **************************** input.gotpl *****************************
 
-func (ec *executionContext) unmarshalInputNewIP(ctx context.Context, obj interface{}) (model.NewIP, error) {
-	var it model.NewIP
-	var asMap = obj.(map[string]interface{})
-
-	for k, v := range asMap {
-		switch k {
-		case "response_code":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("response_code"))
-			it.ResponseCode, err = ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		case "ip_address":
-			var err error
-
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ip_address"))
-			it.IPAddress, err = ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-		}
-	}
-
-	return it, nil
-}
-
 // endregion **************************** input.gotpl *****************************
 
 // region    ************************** interface.gotpl ***************************
@@ -1742,39 +1732,39 @@ func (ec *executionContext) unmarshalInputNewIP(ctx context.Context, obj interfa
 
 // region    **************************** object.gotpl ****************************
 
-var iPAddressImplementors = []string{"IPAddress"}
+var iPDetailsImplementors = []string{"IPDetails"}
 
-func (ec *executionContext) _IPAddress(ctx context.Context, sel ast.SelectionSet, obj *model.IPAddress) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, iPAddressImplementors)
+func (ec *executionContext) _IPDetails(ctx context.Context, sel ast.SelectionSet, obj *model.IPDetails) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, iPDetailsImplementors)
 
 	out := graphql.NewFieldSet(fields)
 	var invalids uint32
 	for i, field := range fields {
 		switch field.Name {
 		case "__typename":
-			out.Values[i] = graphql.MarshalString("IPAddress")
+			out.Values[i] = graphql.MarshalString("IPDetails")
 		case "uuid":
-			out.Values[i] = ec._IPAddress_uuid(ctx, field, obj)
+			out.Values[i] = ec._IPDetails_uuid(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
 		case "created_at":
-			out.Values[i] = ec._IPAddress_created_at(ctx, field, obj)
+			out.Values[i] = ec._IPDetails_created_at(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
 		case "updated_at":
-			out.Values[i] = ec._IPAddress_updated_at(ctx, field, obj)
+			out.Values[i] = ec._IPDetails_updated_at(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
 		case "response_code":
-			out.Values[i] = ec._IPAddress_response_code(ctx, field, obj)
+			out.Values[i] = ec._IPDetails_response_code(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
 		case "ip_address":
-			out.Values[i] = ec._IPAddress_ip_address(ctx, field, obj)
+			out.Values[i] = ec._IPDetails_ip_address(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				invalids++
 			}
@@ -1832,7 +1822,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Query")
-		case "ips":
+		case "getIPDetails":
 			field := field
 			out.Concurrently(i, func() (res graphql.Marshaler) {
 				defer func() {
@@ -1840,10 +1830,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Query_ips(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&invalids, 1)
-				}
+				res = ec._Query_getIPDetails(ctx, field)
 				return res
 			})
 		case "__type":
@@ -2136,79 +2123,6 @@ func (ec *executionContext) marshalNID2string(ctx context.Context, sel ast.Selec
 	return res
 }
 
-func (ec *executionContext) marshalNIPAddress2ᚕᚖgithubᚗcomᚋbrandonforsterᚋresolverᚋgraphᚋmodelᚐIPAddressᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.IPAddress) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNIPAddress2ᚖgithubᚗcomᚋbrandonforsterᚋresolverᚋgraphᚋmodelᚐIPAddress(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-	return ret
-}
-
-func (ec *executionContext) marshalNIPAddress2ᚖgithubᚗcomᚋbrandonforsterᚋresolverᚋgraphᚋmodelᚐIPAddress(ctx context.Context, sel ast.SelectionSet, v *model.IPAddress) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	return ec._IPAddress(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalNNewIP2ᚕᚖgithubᚗcomᚋbrandonforsterᚋresolverᚋgraphᚋmodelᚐNewIPᚄ(ctx context.Context, v interface{}) ([]*model.NewIP, error) {
-	var vSlice []interface{}
-	if v != nil {
-		if tmp1, ok := v.([]interface{}); ok {
-			vSlice = tmp1
-		} else {
-			vSlice = []interface{}{v}
-		}
-	}
-	var err error
-	res := make([]*model.NewIP, len(vSlice))
-	for i := range vSlice {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNNewIP2ᚖgithubᚗcomᚋbrandonforsterᚋresolverᚋgraphᚋmodelᚐNewIP(ctx, vSlice[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-	return res, nil
-}
-
-func (ec *executionContext) unmarshalNNewIP2ᚖgithubᚗcomᚋbrandonforsterᚋresolverᚋgraphᚋmodelᚐNewIP(ctx context.Context, v interface{}) (*model.NewIP, error) {
-	res, err := ec.unmarshalInputNewIP(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
 func (ec *executionContext) unmarshalNString2string(ctx context.Context, v interface{}) (string, error) {
 	res, err := graphql.UnmarshalString(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -2222,6 +2136,36 @@ func (ec *executionContext) marshalNString2string(ctx context.Context, sel ast.S
 		}
 	}
 	return res
+}
+
+func (ec *executionContext) unmarshalNString2ᚕstringᚄ(ctx context.Context, v interface{}) ([]string, error) {
+	var vSlice []interface{}
+	if v != nil {
+		if tmp1, ok := v.([]interface{}); ok {
+			vSlice = tmp1
+		} else {
+			vSlice = []interface{}{v}
+		}
+	}
+	var err error
+	res := make([]string, len(vSlice))
+	for i := range vSlice {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		res[i], err = ec.unmarshalNString2string(ctx, vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+	}
+	return res, nil
+}
+
+func (ec *executionContext) marshalNString2ᚕstringᚄ(ctx context.Context, sel ast.SelectionSet, v []string) graphql.Marshaler {
+	ret := make(graphql.Array, len(v))
+	for i := range v {
+		ret[i] = ec.marshalNString2string(ctx, sel, v[i])
+	}
+
+	return ret
 }
 
 func (ec *executionContext) unmarshalNTime2timeᚐTime(ctx context.Context, v interface{}) (time.Time, error) {
@@ -2492,44 +2436,11 @@ func (ec *executionContext) marshalOBoolean2ᚖbool(ctx context.Context, sel ast
 	return graphql.MarshalBoolean(*v)
 }
 
-func (ec *executionContext) marshalOIPAddress2ᚕᚖgithubᚗcomᚋbrandonforsterᚋresolverᚋgraphᚋmodelᚐIPAddressᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.IPAddress) graphql.Marshaler {
+func (ec *executionContext) marshalOIPDetails2ᚖgithubᚗcomᚋbrandonforsterᚋresolverᚋgraphᚋmodelᚐIPDetails(ctx context.Context, sel ast.SelectionSet, v *model.IPDetails) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNIPAddress2ᚖgithubᚗcomᚋbrandonforsterᚋresolverᚋgraphᚋmodelᚐIPAddress(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-	return ret
+	return ec._IPDetails(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOString2string(ctx context.Context, v interface{}) (string, error) {

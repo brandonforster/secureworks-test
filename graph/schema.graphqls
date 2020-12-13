@@ -1,6 +1,6 @@
 scalar Time
 
-type IPAddress {
+type IPDetails {
   uuid: ID!
   created_at: Time!
   updated_at: Time!
@@ -9,14 +9,9 @@ type IPAddress {
 }
 
 type Query {
-  ips: [IPAddress!]!
-}
-
-input NewIP {
-  response_code: String!
-  ip_address: String!
+  getIPDetails(ip: String!): IPDetails
 }
 
 type Mutation {
-  enqueue(ip: [NewIP!]!): [IPAddress!]
+  enqueue(ip: [String!]!): Boolean
 }

@@ -5,18 +5,24 @@ package graph
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/brandonforster/resolver/graph/generated"
 	"github.com/brandonforster/resolver/graph/model"
 )
 
-func (r *mutationResolver) Enqueue(ctx context.Context, ip []*model.NewIP) ([]*model.IPAddress, error) {
-	panic(fmt.Errorf("not implemented"))
+// TODO: need to do... *waves hands*
+func (r *mutationResolver) Enqueue(ctx context.Context, ip []string) (*bool, error) {
+	retval := true
+	for _, address := range ip {
+		retval = r.Store(address) && retval
+	}
+
+	return &retval, nil
 }
 
-func (r *queryResolver) Ips(ctx context.Context) ([]*model.IPAddress, error) {
-	panic(fmt.Errorf("not implemented"))
+// TODO: if does not exist in DB, should do internet lookup
+func (r *queryResolver) GetIPDetails(ctx context.Context, ip string) (*model.IPDetails, error) {
+	return r.Get(ip)
 }
 
 // Mutation returns generated.MutationResolver implementation.
