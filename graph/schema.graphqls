@@ -1,28 +1,22 @@
-# GraphQL schema example
-#
-# https://gqlgen.com/getting-started/
+scalar Time
 
-type Todo {
-  id: ID!
-  text: String!
-  done: Boolean!
-  user: User!
-}
-
-type User {
-  id: ID!
-  name: String!
+type IPAddress {
+  uuid: ID!
+  created_at: Time!
+  updated_at: Time!
+  response_code: String!
+  ip_address: String!
 }
 
 type Query {
-  todos: [Todo!]!
+  ips: [IPAddress!]!
 }
 
-input NewTodo {
-  text: String!
-  userId: String!
+input NewIP {
+  response_code: String!
+  ip_address: String!
 }
 
 type Mutation {
-  createTodo(input: NewTodo!): Todo!
+  enqueue(ip: [NewIP!]!): [IPAddress!]
 }

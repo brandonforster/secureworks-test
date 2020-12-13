@@ -7,6 +7,7 @@ import (
 
 	"github.com/99designs/gqlgen/graphql/handler"
 	"github.com/99designs/gqlgen/graphql/playground"
+
 	"github.com/brandonforster/resolver/graph"
 	"github.com/brandonforster/resolver/graph/generated"
 )

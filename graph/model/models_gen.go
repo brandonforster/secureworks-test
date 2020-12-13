@@ -2,19 +2,19 @@
 
 package model
 
-type NewTodo struct {
-	Text   string `json:"text"`
-	UserID string `json:"userId"`
+import (
+	"time"
+)
+
+type IPAddress struct {
+	UUID         string    `json:"uuid"`
+	CreatedAt    time.Time `json:"created_at"`
+	UpdatedAt    time.Time `json:"updated_at"`
+	ResponseCode string    `json:"response_code"`
+	IPAddress    string    `json:"ip_address"`
 }
 
-type Todo struct {
-	ID   string `json:"id"`
-	Text string `json:"text"`
-	Done bool   `json:"done"`
-	User *User  `json:"user"`
-}
-
-type User struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+type NewIP struct {
+	ResponseCode string `json:"response_code"`
+	IPAddress    string `json:"ip_address"`
 }
