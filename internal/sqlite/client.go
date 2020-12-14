@@ -36,8 +36,33 @@ func (c *Client) AddIPDetails(contract model.IPDetails) (*model.IPDetails, error
 	modelIP.fromContract(contract)
 
 	// since we aren't using the int64 ID, we don't actually care about the result
-	_, err := c.db.Exec("INSERT INTO ip(id, created_at, updated_at, response_code, ip_address) VALUES ($1, $2, $3, "+
-		"$4, $5)", modelIP.ID, modelIP.CreatedAt, modelIP.UpdatedAt, modelIP.ResponseCode, modelIP.IPAddress)
+	_, err := c.db.Exec(
+		"INSERT INTO ip(id, created_at, updated_at, response_code, ip_address) VALUES ($1, $2, $3, $4, $5)",
+		modelIP.ID,
+		modelIP.CreatedAt,
+		modelIP.UpdatedAt,
+		modelIP.ResponseCode,
+		modelIP.IPAddress,
+		)
+	if err != nil {
+		return nil, err
+	}
+
+	retval := modelIP.toContract()
+	return &retval, nil
+}
+
+func (c *Client) UpdateIPDetails(contract model.IPDetails) (*model.IPDetails, error) {
+	var modelIP IPDetails
+	modelIP.fromContract(contract)
+
+	// since we aren't using the int64 ID, we don't actually care about the result
+	_, err := c.db.Exec(
+		"UPDATE ip SET updated_at=$1, response_code=$2 WHERE id = ?",
+		modelIP.UpdatedAt,
+		modelIP.ResponseCode,
+		modelIP.ID,
+		)
 	if err != nil {
 		return nil, err
 	}

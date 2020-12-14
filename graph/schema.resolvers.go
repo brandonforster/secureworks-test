@@ -17,7 +17,15 @@ func (r *mutationResolver) Enqueue(ctx context.Context, ip []string) ([]*model.I
 	}
 
 	outputModels := make([]*model.IPDetails, len(ip))
+	for i := range outputModels {
+		output, err := r.GetAndStore(ip[i])
+		if err != nil {
+			return nil, err
+		}
+		outputModels[i] = output
+	}
 
+	/** TODO: background stuff
 	for i, address := range ip {
 		modelChan, errChan := r.Queue(address)
 
@@ -27,6 +35,7 @@ func (r *mutationResolver) Enqueue(ctx context.Context, ip []string) ([]*model.I
 		}
 		outputModels[i] = <-modelChan
 	}
+	 */
 
 	return outputModels, nil
 }

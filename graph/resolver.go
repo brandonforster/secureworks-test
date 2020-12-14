@@ -33,20 +33,17 @@ func (r *Resolver) GetAndStore(IP string) (*model.IPDetails, error) {
 		if err != nil {
 			return nil, err
 		}
-	} else {
-		// this exists, update the response codes and LastUpdated
-		responseCode, err := spamhaus.Lookup(IP)
+
+		err = r.addToDB(*details)
 		if err != nil {
 			return nil, err
 		}
-
-		details.ResponseCode = responseCode
-		details.UpdatedAt = time.Now()
-	}
-
-	err = r.storeToDB(*details)
-	if err != nil {
-		return nil, err
+	} else {
+		// this exists, update the response codes and LastUpdated
+		details, err = r.updateToDB(*details)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return details, nil
@@ -122,8 +119,8 @@ func (r *Resolver) getFromDB(IP string) (*model.IPDetails, error) {
 	return details, nil
 }
 
-// storeToDB stores the model provided
-func (r *Resolver) storeToDB(toStore model.IPDetails) error {
+// addToDB stores the model provided
+func (r *Resolver) addToDB(toStore model.IPDetails) error {
 	var err error
 	r.client, err = sqlite.NewClient(FILENAME)
 	if err != nil {
@@ -141,6 +138,33 @@ func (r *Resolver) storeToDB(toStore model.IPDetails) error {
 	}
 
 	return nil
+}
+
+// updateToDB updates the model provided and stores it to the DB
+func (r *Resolver) updateToDB(toUpdate model.IPDetails) (*model.IPDetails, error) {
+	var err error
+	r.client, err = sqlite.NewClient(FILENAME)
+	if err != nil {
+		return nil, err
+	}
+
+	defer r.client.Close()
+
+	responseCode, err := spamhaus.Lookup(toUpdate.IPAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	updated := toUpdate
+	updated.ResponseCode = responseCode
+	updated.UpdatedAt = time.Now()
+
+	result, err := r.client.UpdateIPDetails(updated)
+	if err != nil {
+		return nil, err
+	}
+
+	return result, nil
 }
 
 // newIPLookup should be used when an IP is unknown to the system
