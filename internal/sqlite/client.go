@@ -19,17 +19,52 @@ func (c *Client) Close() error {
 func NewClient(filename string) (*Client, error) {
 	sqliteDb, err := sqlx.Open("sqlite3", fmt.Sprintf("file:%s?_fk=true&_busy_timeout=5000&_journal_mode=WAL", filename))
 	if err != nil {
-		return nil, fmt.Errorf("could not open sqlite db: %s", err)
+		return nil, err
 	}
 
 	err = sqliteDb.Ping()
 	if err != nil {
-		return nil, fmt.Errorf("error connecting to database: %s", err)
+		return nil, err
 	}
 
 	return &Client{db: sqliteDb}, nil
 }
 
-func (c *Client) AddIPDetails(newIP model.IPDetails) (model.IPDetails, error) {
+func (c *Client) AddIPDetails(contract model.IPDetails) (model.IPDetails, error) {
+	var modelIP IPDetails
+	modelIP.fromContract(contract)
 
+	// since we aren't using the int64 ID, we don't actually care about the result
+	_, err := c.db.Exec("INSERT INTO ip(id, created_at, updated_at, response_code, ip_address) VALUES ($1, $2, $3, "+
+		"$4, $5)", modelIP.ID, modelIP.CreatedAt, modelIP.UpdatedAt, modelIP.ResponseCode, modelIP.IPAddress)
+	if err != nil {
+		return model.IPDetails{}, err
+	}
+
+	return modelIP.toContract(), nil
+}
+
+func (c *Client) GetIPDetail(id string) (model.IPDetails, error) {
+	var modelIP IPDetails
+	err := c.db.Get(&modelIP, "SELECT * FROM ip WHERE id = ?", id)
+	if err != nil {
+		return model.IPDetails{}, err
+	}
+
+	return modelIP.toContract(), nil
+}
+
+func (c *Client) GetIPDetails() ([]model.IPDetails, error) {
+	var models []IPDetails
+	err := c.db.Get(&models, "SELECT * FROM ip;")
+	if err != nil {
+		return nil, err
+	}
+
+	contracts := make([]model.IPDetails, len(models))
+	for i := range contracts {
+		contracts[i] = models[i].toContract()
+	}
+
+	return contracts, nil
 }
