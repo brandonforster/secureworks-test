@@ -1,6 +1,5 @@
 package graph
 
-//go:generate go run github.com/99designs/gqlgen
 import (
 	"context"
 	"time"
@@ -9,29 +8,17 @@ import (
 
 	"github.com/brandonforster/resolver/graph/model"
 	"github.com/brandonforster/resolver/internal/spamhaus"
+	"github.com/brandonforster/resolver/internal/sqlite"
 )
 
-// TODO: have this backed by a SQLite DB and not an array
+const FILENAME= `C:\Users\brandon\Desktop\resolver.db`
+
 type Resolver struct {
-	IPs []*model.IPDetails
-}
-
-// getFromDB returns the IP details if they exist in the DB. Otherwise, it returns nil.
-func (r Resolver) getFromDB(IP string) *model.IPDetails {
-	for _, detail := range r.IPs {
-		if IP == detail.IPAddress {
-			return detail
-		}
-	}
-
-	return nil
+	client *sqlite.Client
 }
 
 // TODO: this does not even begin to do what enqueue should
 func (r *Resolver) Store(IP string) bool {
-	details := r.getFromDB(IP)
-	r.IPs = append(r.IPs, details)
-
 	return true
 }
 
@@ -42,7 +29,18 @@ func (r *Resolver) Store(IP string) bool {
 //
 // Returns the IPDetails if the query executed successfully; an error otherwise.
 func (r *Resolver) Get(IP string) (*model.IPDetails, error) {
-	value := r.getFromDB(IP)
+	var err error
+	r.client, err = sqlite.NewClient(FILENAME)
+	if err != nil {
+		return nil, err
+	}
+
+	details, err := r.client.GetIPDetailByAddress(IP)
+	if err != nil {
+		return nil, err
+	}
+
+	/** TODO: what does the DB do on no such element?
 	if value == nil {
 		var err error
 		value, err = newIPLookup(IP)
@@ -50,8 +48,9 @@ func (r *Resolver) Get(IP string) (*model.IPDetails, error) {
 			return nil, err
 		}
 	}
+	 */
 
-	return value, nil
+	return &details, nil
 }
 
 func newIPLookup(IP string) (*model.IPDetails, error) {

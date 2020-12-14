@@ -54,6 +54,16 @@ func (c *Client) GetIPDetail(id string) (model.IPDetails, error) {
 	return modelIP.toContract(), nil
 }
 
+func (c *Client) GetIPDetailByAddress(address string) (model.IPDetails, error) {
+	var modelIP IPDetails
+	err := c.db.Get(&modelIP, "SELECT * FROM ip WHERE ip_address = ?", address)
+	if err != nil {
+		return model.IPDetails{}, err
+	}
+
+	return modelIP.toContract(), nil
+}
+
 func (c *Client) GetIPDetails() ([]model.IPDetails, error) {
 	var models []IPDetails
 	err := c.db.Get(&models, "SELECT * FROM ip;")
