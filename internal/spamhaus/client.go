@@ -11,9 +11,9 @@ import (
 // IP is an IPv4 formatted address to be queried in the Spamhaus system.
 //
 // The string return value is return code returned back by the Spamhaus system.
-func Lookup(IP string) (string, error) {
+func Lookup(IP string) ([]string, error) {
 	if net.ParseIP(IP) == nil {
-		return "", fmt.Errorf("%s is not a valid IPv4 address", IP)
+		return nil, fmt.Errorf("%s is not a valid IPv4 address", IP)
 	}
 
 	// we need to reverse the given IP to do the lookup
@@ -31,21 +31,20 @@ func Lookup(IP string) (string, error) {
 	if err != nil {
 		// unknown to Spamhaus and probably not a spammer
 		if strings.Contains(err.Error(), "no such host") {
-			return "", nil
+			return nil, nil
 		}
 
-		return "", err
+		return nil, err
 	}
 
 	for _, code := range results {
 		_, err = parseReturnCode(code)
 		if err != nil {
-			return "", err
+			return nil, err
 		}
 	}
 
-	// TODO: what to do with other return codes?
-	return results[0], nil
+	return results, nil
 }
 
 func parseReturnCode(code string) (string, error) {

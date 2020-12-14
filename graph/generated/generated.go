@@ -211,7 +211,7 @@ type IPDetails {
   uuid: ID!
   created_at: Time!
   updated_at: Time!
-  response_code: String!
+  response_code: [String!]!
   ip_address: String!
 }
 
@@ -448,9 +448,9 @@ func (ec *executionContext) _IPDetails_response_code(ctx context.Context, field 
 		}
 		return graphql.Null
 	}
-	res := resTmp.(string)
+	res := resTmp.([]string)
 	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
+	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) _IPDetails_ip_address(ctx context.Context, field graphql.CollectedField, obj *model.IPDetails) (ret graphql.Marshaler) {

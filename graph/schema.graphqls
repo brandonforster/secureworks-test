@@ -4,7 +4,7 @@ type IPDetails {
   uuid: ID!
   created_at: Time!
   updated_at: Time!
-  response_code: String!
+  response_code: [String!]!
   ip_address: String!
 }
 

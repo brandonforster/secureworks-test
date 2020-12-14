@@ -20,7 +20,6 @@ func (r *mutationResolver) Enqueue(ctx context.Context, ip []string) (*bool, err
 	return &retval, nil
 }
 
-// TODO: if does not exist in DB, should do internet lookup
 func (r *queryResolver) GetIPDetails(ctx context.Context, ip string) (*model.IPDetails, error) {
 	return r.Get(ip)
 }
