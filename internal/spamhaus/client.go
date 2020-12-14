@@ -1,3 +1,5 @@
+// spamhaus is a package designed for interacting with the Spamhaus spam blocklist.
+// It should not be considered an exhaustive API.
 package spamhaus
 
 import (

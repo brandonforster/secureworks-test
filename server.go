@@ -15,12 +15,12 @@ import (
 	"github.com/brandonforster/resolver/graph/generated"
 )
 
-const defaultPort = "8080"
+const PORT = "8080"
 
 func main() {
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = defaultPort
+		port = PORT
 	}
 
 	router := chi.NewRouter()
@@ -36,8 +36,8 @@ func main() {
 	log.Fatal(http.ListenAndServe(":"+port, router))
 }
 
+// literally basic auth
 func basicAuth() func(http.Handler) http.Handler {
-	// TODO: not this
 	username := "secureworks"
 	password := "supersecret"
 
@@ -46,7 +46,6 @@ func basicAuth() func(http.Handler) http.Handler {
 			user, pass, ok := r.BasicAuth()
 			var ctx context.Context
 
-			// use constant time compare to try and ward off time attacks (lol)
 			if !ok ||
 				subtle.ConstantTimeCompare([]byte(user), []byte(username)) != 1 ||
 				subtle.ConstantTimeCompare([]byte(pass), []byte(password)) != 1 {

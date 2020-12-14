@@ -11,6 +11,14 @@ import (
 	"github.com/brandonforster/resolver/graph/model"
 )
 
+// Enqueue is designed to kick off a background job to do the DNS lookup and store it in the database for each IP
+// passed in for future lookups. If the lookup has already happened, this will queue it up again and update the
+// record in the database. It returns an array of records stored in the database if successful, an error otherwise.
+//
+// ctx is the context of the running app, used in this method to check authentication
+// ip is a list of IPs to check and ultimately store
+//
+// Returns a slice of IPDetails if the query executed successfully; an error otherwise.
 func (r *mutationResolver) Enqueue(ctx context.Context, ip []string) ([]*model.IPDetails, error) {
 	if !isAuthorized(ctx) {
 		return nil, fmt.Errorf("access denied")
@@ -38,6 +46,13 @@ func (r *mutationResolver) Enqueue(ctx context.Context, ip []string) ([]*model.I
 	return outputModels, nil
 }
 
+// GetIPDetails will look up the IP provided in the database, and if it doesn't exist it will do a one-off lookup.
+// This function will never write to the database.
+//
+// ctx is the context of the running app, used in this method to check authentication
+// ip is the IP to check
+//
+// Returns the IPDetails if the query executed successfully; an error otherwise.
 func (r *queryResolver) GetIPDetails(ctx context.Context, ip string) (*model.IPDetails, error) {
 	if !isAuthorized(ctx) {
 		return nil, fmt.Errorf("access denied")

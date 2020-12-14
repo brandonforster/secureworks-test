@@ -9,6 +9,8 @@ import (
 
 const SEPARATOR = ","
 
+// IPDetails is a struct designed to make interacting with the database easier.
+// The struct used by most of the system is close, but not quite what we need for interacting with the DB.
 type IPDetails struct {
 	ID           string
 	CreatedAt    time.Time `db:"created_at"`
@@ -17,6 +19,7 @@ type IPDetails struct {
 	IPAddress    string    `db:"ip_address"`
 }
 
+// use this method any time you have a system-wide representation of an object and need a database specific data model
 func (d *IPDetails) fromContract(cd model.IPDetails) {
 	d.ID = cd.UUID
 	d.CreatedAt = cd.CreatedAt
@@ -26,6 +29,7 @@ func (d *IPDetails) fromContract(cd model.IPDetails) {
 	d.IPAddress = cd.IPAddress
 }
 
+// use this method any time you have a database specific representation of an object and need a system-wide data model
 func (d *IPDetails) toContract() model.IPDetails {
 	return model.IPDetails{
 		UUID:      d.ID,
