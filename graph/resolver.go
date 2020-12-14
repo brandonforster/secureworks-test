@@ -1,6 +1,7 @@
 package graph
 //go:generate go run github.com/99designs/gqlgen
 import (
+	"context"
 	"time"
 
 	"github.com/google/uuid"
@@ -67,4 +68,10 @@ func newIPLookup(IP string) (*model.IPDetails, error) {
 	}
 
 	return &details, nil
+}
+
+func isAuthorized(ctx context.Context) bool {
+	isAuth, _ := ctx.Value("isAuth").(bool)
+
+	return isAuth
 }

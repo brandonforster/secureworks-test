@@ -5,6 +5,7 @@ package graph
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/brandonforster/resolver/graph/generated"
 	"github.com/brandonforster/resolver/graph/model"
@@ -12,6 +13,10 @@ import (
 
 // TODO: need to do... *waves hands*
 func (r *mutationResolver) Enqueue(ctx context.Context, ip []string) (*bool, error) {
+	if !isAuthorized(ctx){
+		return nil, fmt.Errorf("access denied")
+	}
+
 	retval := true
 	for _, address := range ip {
 		retval = r.Store(address) && retval
@@ -21,6 +26,10 @@ func (r *mutationResolver) Enqueue(ctx context.Context, ip []string) (*bool, err
 }
 
 func (r *queryResolver) GetIPDetails(ctx context.Context, ip string) (*model.IPDetails, error) {
+	if !isAuthorized(ctx){
+		return nil, fmt.Errorf("access denied")
+	}
+
 	return r.Get(ip)
 }
 
