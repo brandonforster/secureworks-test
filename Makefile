@@ -1,4 +1,5 @@
 run:
+	sqlite3 resolver.db
 	go run server.go
 
 test:
