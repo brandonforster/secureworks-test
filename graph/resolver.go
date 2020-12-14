@@ -1,4 +1,5 @@
 package graph
+
 //go:generate go run github.com/99designs/gqlgen
 import (
 	"context"
@@ -13,7 +14,7 @@ import (
 	"github.com/brandonforster/resolver/internal/sqlite"
 )
 
-const FILENAME= `C:\Users\brandon\Desktop\resolver.db`
+const FILENAME = `C:\Users\brandon\Desktop\resolver.db`
 
 type Resolver struct {
 	client *sqlite.Client
@@ -51,7 +52,7 @@ func (r *Resolver) GetAndStore(IP string) (*model.IPDetails, error) {
 	return details, nil
 }
 
-func (r *Resolver) Queue(ip string) (<-chan *model.IPDetails,<-chan error) {
+func (r *Resolver) Queue(ip string) (<-chan *model.IPDetails, <-chan error) {
 	modelChan := make(chan *model.IPDetails)
 	errChan := make(chan error)
 

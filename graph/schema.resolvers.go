@@ -12,7 +12,7 @@ import (
 )
 
 func (r *mutationResolver) Enqueue(ctx context.Context, ip []string) ([]*model.IPDetails, error) {
-		if !isAuthorized(ctx) {
+	if !isAuthorized(ctx) {
 		return nil, fmt.Errorf("access denied")
 	}
 
@@ -21,7 +21,7 @@ func (r *mutationResolver) Enqueue(ctx context.Context, ip []string) ([]*model.I
 	for i, address := range ip {
 		modelChan, errChan := r.Queue(address)
 
-		err := <- errChan
+		err := <-errChan
 		if err != nil {
 			return nil, err
 		}
