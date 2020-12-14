@@ -1,6 +1,7 @@
 package spamhaus
 
 import (
+	"fmt"
 	"net"
 	"strings"
 )
@@ -11,23 +12,57 @@ import (
 //
 // The string return value is return code returned back by the Spamhaus system.
 func Lookup(IP string) (string, error) {
-	// we need to reverse the given IP to do the lookup
-	splitAddress := strings.Split(IP, ".")
-
-	for i, j := 0, len(splitAddress)-1; i < len(splitAddress)/2; i, j = i+1, j-1 {
-		splitAddress[i], splitAddress[j] = splitAddress[j], splitAddress[i]
+	if net.ParseIP(IP) == nil {
+		return "", fmt.Errorf("%s is not a valid IPv4 address", IP)
 	}
 
-	reversed := strings.Join(splitAddress, ".")
+	// we need to reverse the given IP to do the lookup
+	octets := strings.Split(IP, ".")
+
+	for i, j := 0, len(octets)-1; i < j; i, j = i+1, j-1 {
+		octets[i], octets[j] = octets [j], octets[i]
+	}
+
+	reversed := strings.Join(octets, ".")
 
 	queryAddress := reversed + ".zen.spamhaus.org"
 
-	result, err := net.LookupHost(queryAddress)
+	results, err := net.LookupHost(queryAddress)
 	if err != nil {
+		// unknown to Spamhaus and probably not a spammer
+		if strings.Contains(err.Error(), "no such host") {
+			return "", nil
+		}
+
 		return "", err
 	}
 
-	print(result)
-	return "", nil
+	for _, code := range results {
+		_, err = parseReturnCode(code)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	// TODO: what to do with other return codes?
+	return results[0], nil
+}
+
+func parseReturnCode(code string) (string, error) {
+	knownCodes := map[string]string{
+		"127.0.0.2": 	"Direct UBE sources, spam operations & spam services",
+		"127.0.0.3" :	"Direct snowshoe spam sources detected via automation",
+		"127.0.0.4" :	"CBL (3rd party exploits such as proxies, trojans, etc.)",
+		"127.0.0.6" :	"CBL (3rd party exploits such as proxies, trojans, etc.)",
+		"127.0.0.7" :	"CBL (3rd party exploits such as proxies, trojans, etc.)",
+		"127.0.0.10" :	"End-user Non-MTA IP addresses set by ISP outbound mail policy",
+		"127.0.0.11" :	"End-user Non-MTA IP addresses set by ISP outbound mail policy",
+	}
+
+	if _, exists := knownCodes[code]; exists {
+		return code, nil
+	}
+
+	return "", fmt.Errorf("unknown return code %s", code)
 }
 
