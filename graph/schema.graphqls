@@ -13,5 +13,5 @@ type Query {
 }
 
 type Mutation {
-  enqueue(ip: [String!]!): Boolean
+  enqueue(ip: [String!]!): [IPDetails!]!
 }

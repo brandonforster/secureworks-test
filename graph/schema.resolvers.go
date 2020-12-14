@@ -11,18 +11,24 @@ import (
 	"github.com/brandonforster/resolver/graph/model"
 )
 
-// TODO: need to do... *waves hands*
-func (r *mutationResolver) Enqueue(ctx context.Context, ip []string) (*bool, error) {
-	if !isAuthorized(ctx) {
+func (r *mutationResolver) Enqueue(ctx context.Context, ip []string) ([]*model.IPDetails, error) {
+		if !isAuthorized(ctx) {
 		return nil, fmt.Errorf("access denied")
 	}
 
-	retval := true
-	for _, address := range ip {
-		retval = r.Store(address) && retval
+	outputModels := make([]*model.IPDetails, len(ip))
+
+	for i, address := range ip {
+		modelChan, errChan := r.Queue(address)
+
+		err := <- errChan
+		if err != nil {
+			return nil, err
+		}
+		outputModels[i] = <-modelChan
 	}
 
-	return &retval, nil
+	return outputModels, nil
 }
 
 func (r *queryResolver) GetIPDetails(ctx context.Context, ip string) (*model.IPDetails, error) {
