@@ -10,11 +10,11 @@ import (
 const SEPARATOR = ","
 
 type IPDetails struct {
-	ID         string
+	ID           string
 	CreatedAt    time.Time `db:"created_at"`
 	UpdatedAt    time.Time `db:"updated_at"`
-	ResponseCode string `db:"response_code"`
-	IPAddress    string `db:"ip_address"`
+	ResponseCode string    `db:"response_code"`
+	IPAddress    string    `db:"ip_address"`
 }
 
 func (d *IPDetails) fromContract(cd model.IPDetails) {
@@ -28,9 +28,9 @@ func (d *IPDetails) fromContract(cd model.IPDetails) {
 
 func (d *IPDetails) toContract() model.IPDetails {
 	return model.IPDetails{
-		UUID:         d.ID,
-		CreatedAt:    d.CreatedAt,
-		UpdatedAt:    d.UpdatedAt,
+		UUID:      d.ID,
+		CreatedAt: d.CreatedAt,
+		UpdatedAt: d.UpdatedAt,
 		// retrieving the array as CSV is easy and elegant
 		ResponseCode: strings.Split(d.ResponseCode, SEPARATOR),
 		IPAddress:    d.IPAddress,

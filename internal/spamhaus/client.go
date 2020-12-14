@@ -20,7 +20,7 @@ func Lookup(IP string) ([]string, error) {
 	octets := strings.Split(IP, ".")
 
 	for i, j := 0, len(octets)-1; i < j; i, j = i+1, j-1 {
-		octets[i], octets[j] = octets [j], octets[i]
+		octets[i], octets[j] = octets[j], octets[i]
 	}
 
 	reversed := strings.Join(octets, ".")
@@ -49,13 +49,13 @@ func Lookup(IP string) ([]string, error) {
 
 func parseReturnCode(code string) (string, error) {
 	knownCodes := map[string]string{
-		"127.0.0.2": 	"Direct UBE sources, spam operations & spam services",
-		"127.0.0.3" :	"Direct snowshoe spam sources detected via automation",
-		"127.0.0.4" :	"CBL (3rd party exploits such as proxies, trojans, etc.)",
-		"127.0.0.6" :	"CBL (3rd party exploits such as proxies, trojans, etc.)",
-		"127.0.0.7" :	"CBL (3rd party exploits such as proxies, trojans, etc.)",
-		"127.0.0.10" :	"End-user Non-MTA IP addresses set by ISP outbound mail policy",
-		"127.0.0.11" :	"End-user Non-MTA IP addresses set by ISP outbound mail policy",
+		"127.0.0.2":  "Direct UBE sources, spam operations & spam services",
+		"127.0.0.3":  "Direct snowshoe spam sources detected via automation",
+		"127.0.0.4":  "CBL (3rd party exploits such as proxies, trojans, etc.)",
+		"127.0.0.6":  "CBL (3rd party exploits such as proxies, trojans, etc.)",
+		"127.0.0.7":  "CBL (3rd party exploits such as proxies, trojans, etc.)",
+		"127.0.0.10": "End-user Non-MTA IP addresses set by ISP outbound mail policy",
+		"127.0.0.11": "End-user Non-MTA IP addresses set by ISP outbound mail policy",
 	}
 
 	if _, exists := knownCodes[code]; exists {
@@ -64,4 +64,3 @@ func parseReturnCode(code string) (string, error) {
 
 	return "", fmt.Errorf("unknown return code %s", code)
 }
-

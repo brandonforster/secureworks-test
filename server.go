@@ -55,7 +55,6 @@ func basicAuth() func(http.Handler) http.Handler {
 				ctx = context.WithValue(r.Context(), "isAuth", true)
 			}
 
-
 			r = r.WithContext(ctx)
 			next.ServeHTTP(w, r)
 		})

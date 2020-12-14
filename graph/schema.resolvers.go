@@ -13,7 +13,7 @@ import (
 
 // TODO: need to do... *waves hands*
 func (r *mutationResolver) Enqueue(ctx context.Context, ip []string) (*bool, error) {
-	if !isAuthorized(ctx){
+	if !isAuthorized(ctx) {
 		return nil, fmt.Errorf("access denied")
 	}
 
@@ -26,7 +26,7 @@ func (r *mutationResolver) Enqueue(ctx context.Context, ip []string) (*bool, err
 }
 
 func (r *queryResolver) GetIPDetails(ctx context.Context, ip string) (*model.IPDetails, error) {
-	if !isAuthorized(ctx){
+	if !isAuthorized(ctx) {
 		return nil, fmt.Errorf("access denied")
 	}
 
