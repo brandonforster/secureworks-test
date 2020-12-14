@@ -14,7 +14,7 @@ import (
 	"github.com/brandonforster/resolver/internal/sqlite"
 )
 
-const FILENAME = `C:\Users\brandon\Desktop\resolver.db`
+const FILENAME = `resolver.db`
 
 type Resolver struct {
 	client *sqlite.Client
