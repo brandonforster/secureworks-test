@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/jmoiron/sqlx"
+	_ "github.com/mattn/go-sqlite3"
 
 	"github.com/brandonforster/resolver/graph/model"
 )
@@ -30,7 +31,7 @@ func NewClient(filename string) (*Client, error) {
 	return &Client{db: sqliteDb}, nil
 }
 
-func (c *Client) AddIPDetails(contract model.IPDetails) (model.IPDetails, error) {
+func (c *Client) AddIPDetails(contract model.IPDetails) (*model.IPDetails, error) {
 	var modelIP IPDetails
 	modelIP.fromContract(contract)
 
@@ -38,42 +39,46 @@ func (c *Client) AddIPDetails(contract model.IPDetails) (model.IPDetails, error)
 	_, err := c.db.Exec("INSERT INTO ip(id, created_at, updated_at, response_code, ip_address) VALUES ($1, $2, $3, "+
 		"$4, $5)", modelIP.ID, modelIP.CreatedAt, modelIP.UpdatedAt, modelIP.ResponseCode, modelIP.IPAddress)
 	if err != nil {
-		return model.IPDetails{}, err
+		return nil, err
 	}
 
-	return modelIP.toContract(), nil
+	retval := modelIP.toContract()
+	return &retval, nil
 }
 
-func (c *Client) GetIPDetail(id string) (model.IPDetails, error) {
+func (c *Client) GetIPDetail(id string) (*model.IPDetails, error) {
 	var modelIP IPDetails
 	err := c.db.Get(&modelIP, "SELECT * FROM ip WHERE id = ?", id)
 	if err != nil {
-		return model.IPDetails{}, err
+		return nil, err
 	}
 
-	return modelIP.toContract(), nil
+	retval := modelIP.toContract()
+	return &retval, nil
 }
 
-func (c *Client) GetIPDetailByAddress(address string) (model.IPDetails, error) {
+func (c *Client) GetIPDetailByAddress(address string) (*model.IPDetails, error) {
 	var modelIP IPDetails
 	err := c.db.Get(&modelIP, "SELECT * FROM ip WHERE ip_address = ?", address)
 	if err != nil {
-		return model.IPDetails{}, err
+		return nil, err
 	}
 
-	return modelIP.toContract(), nil
+	retval := modelIP.toContract()
+	return &retval, nil
 }
 
-func (c *Client) GetIPDetails() ([]model.IPDetails, error) {
+func (c *Client) GetIPDetails() ([]*model.IPDetails, error) {
 	var models []IPDetails
 	err := c.db.Get(&models, "SELECT * FROM ip;")
 	if err != nil {
 		return nil, err
 	}
 
-	contracts := make([]model.IPDetails, len(models))
+	contracts := make([]*model.IPDetails, len(models))
 	for i := range contracts {
-		contracts[i] = models[i].toContract()
+		thisContract := models[i].toContract()
+		contracts[i] = &thisContract
 	}
 
 	return contracts, nil

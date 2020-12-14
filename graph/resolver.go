@@ -2,6 +2,7 @@ package graph
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -37,20 +38,20 @@ func (r *Resolver) Get(IP string) (*model.IPDetails, error) {
 
 	details, err := r.client.GetIPDetailByAddress(IP)
 	if err != nil {
-		return nil, err
-	}
-
-	/** TODO: what does the DB do on no such element?
-	if value == nil {
-		var err error
-		value, err = newIPLookup(IP)
-		if err != nil {
+		// we do not yet have this in the DB, do a Spamhaus lookup
+		if strings.Contains(err.Error(), "no rows in result") {
+			details, err = newIPLookup(IP)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			// all other errors besides "not yet in DB"
 			return nil, err
 		}
-	}
-	 */
 
-	return &details, nil
+	}
+
+	return details, nil
 }
 
 func newIPLookup(IP string) (*model.IPDetails, error) {
