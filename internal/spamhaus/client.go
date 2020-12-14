@@ -54,6 +54,7 @@ func parseReturnCode(code string) (string, error) {
 		"127.0.0.4":  "CBL (3rd party exploits such as proxies, trojans, etc.)",
 		"127.0.0.6":  "CBL (3rd party exploits such as proxies, trojans, etc.)",
 		"127.0.0.7":  "CBL (3rd party exploits such as proxies, trojans, etc.)",
+		"127.0.0.9":  "Spamhaus DROP/EDROP Data (in addition to 127.0.0.2, since 01-Jun-2016)",
 		"127.0.0.10": "End-user Non-MTA IP addresses set by ISP outbound mail policy",
 		"127.0.0.11": "End-user Non-MTA IP addresses set by ISP outbound mail policy",
 	}

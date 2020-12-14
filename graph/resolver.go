@@ -49,23 +49,13 @@ func (r *Resolver) GetAndStore(IP string) (*model.IPDetails, error) {
 	return details, nil
 }
 
-func (r *Resolver) Queue(ip string) (<-chan *model.IPDetails, <-chan error) {
-	modelChan := make(chan *model.IPDetails)
-	errChan := make(chan error)
-
-	go func() {
-		details, err := r.GetAndStore(ip)
-		if err != nil {
-			errChan <- err
-		} else {
-			modelChan <- details
-		}
-
-		close(modelChan)
-		close(errChan)
-	}()
-
-	return modelChan, errChan
+func (r *Resolver) Queue(ip string, modelChan chan *model.IPDetails, errChan chan error) {
+	details, err := r.GetAndStore(ip)
+	if err != nil {
+		errChan <- err
+	} else {
+		modelChan <- details
+	}
 }
 
 func (r *Resolver) Store(IP string) bool {
@@ -113,7 +103,6 @@ func (r *Resolver) getFromDB(IP string) (*model.IPDetails, error) {
 			// all other errors besides "not yet in DB"
 			return nil, err
 		}
-
 	}
 
 	return details, nil

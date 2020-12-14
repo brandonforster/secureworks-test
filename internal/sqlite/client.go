@@ -43,7 +43,7 @@ func (c *Client) AddIPDetails(contract model.IPDetails) (*model.IPDetails, error
 		modelIP.UpdatedAt,
 		modelIP.ResponseCode,
 		modelIP.IPAddress,
-		)
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +62,7 @@ func (c *Client) UpdateIPDetails(contract model.IPDetails) (*model.IPDetails, er
 		modelIP.UpdatedAt,
 		modelIP.ResponseCode,
 		modelIP.ID,
-		)
+	)
 	if err != nil {
 		return nil, err
 	}
