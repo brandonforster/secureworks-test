@@ -9,6 +9,8 @@ import (
 
 	"github.com/brandonforster/resolver/graph/generated"
 	"github.com/brandonforster/resolver/graph/model"
+	"github.com/brandonforster/resolver/internal/spamhaus"
+	"github.com/brandonforster/resolver/internal/sqlite"
 )
 
 // Enqueue is designed to kick off a background job to do the DNS lookup and store it in the database for each IP
@@ -23,6 +25,16 @@ func (r *mutationResolver) Enqueue(ctx context.Context, ip []string) ([]*model.I
 	if !isAuthorized(ctx) {
 		return nil, fmt.Errorf("access denied")
 	}
+
+	var err error
+	r.DBClient, err = sqlite.NewClient(FILENAME)
+	if err != nil {
+		return nil, err
+	}
+
+	defer r.DBClient.Close()
+
+	r.BlocklistClient = spamhaus.Client{}
 
 	outputModels := make([]*model.IPDetails, len(ip))
 	modelChan := make(chan *model.IPDetails, len(ip))
@@ -57,6 +69,16 @@ func (r *queryResolver) GetIPDetails(ctx context.Context, ip string) (*model.IPD
 	if !isAuthorized(ctx) {
 		return nil, fmt.Errorf("access denied")
 	}
+
+	var err error
+	r.DBClient, err = sqlite.NewClient(FILENAME)
+	if err != nil {
+		return nil, err
+	}
+
+	defer r.DBClient.Close()
+
+	r.BlocklistClient = spamhaus.Client{}
 
 	return r.Get(ip)
 }

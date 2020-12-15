@@ -10,19 +10,19 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/brandonforster/resolver/graph/model"
-	"github.com/brandonforster/resolver/internal/spamhaus"
-	"github.com/brandonforster/resolver/internal/sqlite"
+	"github.com/brandonforster/resolver/internal/interfaces"
 )
 
 const FILENAME = `resolver.db`
 
 type Resolver struct {
-	client *sqlite.Client
+	DBClient        interfaces.DBClient
+	BlocklistClient interfaces.BlocklistClient
 }
 
 // GetAndStore is the backing of the Enqueue mutation.
 // It is designed to get details of an address in the database if they exist, create them if they don't,
-// check Spamhaus in either case and store the record of the check in the database.
+// check the blocklist in either case and store the record of the check in the database.
 // It returns a pointer to an IPDetails if the check and database store were successful; an error otherwise.
 //
 // IP is the address that should be checked and stored into memory
@@ -36,8 +36,8 @@ func (r *Resolver) GetAndStore(IP string) (*model.IPDetails, error) {
 	}
 
 	if details == nil {
-		// we do not yet have this in the DB, do a Spamhaus lookup
-		details, err = newIPLookup(IP)
+		// we do not yet have this in the DB, do a lookup
+		details, err = r.newIPLookup(IP)
 		if err != nil {
 			return nil, err
 		}
@@ -83,8 +83,8 @@ func (r *Resolver) Get(IP string) (*model.IPDetails, error) {
 		return nil, err
 	}
 	if details == nil {
-		// we do not yet have this in the DB, do a Spamhaus lookup
-		details, err = newIPLookup(IP)
+		// we do not yet have this in the DB, do a lookup
+		details, err = r.newIPLookup(IP)
 		if err != nil {
 			return nil, err
 		}
@@ -95,15 +95,7 @@ func (r *Resolver) Get(IP string) (*model.IPDetails, error) {
 
 // getFromDB returns the model if it exists and nil otherwise.
 func (r *Resolver) getFromDB(IP string) (*model.IPDetails, error) {
-	var err error
-	r.client, err = sqlite.NewClient(FILENAME)
-	if err != nil {
-		return nil, err
-	}
-
-	defer r.client.Close()
-
-	details, err := r.client.GetIPDetailByAddress(IP)
+	details, err := r.DBClient.GetIPDetailByAddress(IP)
 	if err != nil {
 		// we do not yet have this in the DB
 		if strings.Contains(err.Error(), "no rows in result") {
@@ -119,15 +111,7 @@ func (r *Resolver) getFromDB(IP string) (*model.IPDetails, error) {
 
 // addToDB stores the model provided
 func (r *Resolver) addToDB(toStore model.IPDetails) error {
-	var err error
-	r.client, err = sqlite.NewClient(FILENAME)
-	if err != nil {
-		return err
-	}
-
-	defer r.client.Close()
-
-	stored, err := r.client.AddIPDetails(toStore)
+	stored, err := r.DBClient.AddIPDetails(toStore)
 	if err != nil {
 		return err
 	}
@@ -140,15 +124,7 @@ func (r *Resolver) addToDB(toStore model.IPDetails) error {
 
 // updateToDB updates the model provided and stores it to the DB
 func (r *Resolver) updateToDB(toUpdate model.IPDetails) (*model.IPDetails, error) {
-	var err error
-	r.client, err = sqlite.NewClient(FILENAME)
-	if err != nil {
-		return nil, err
-	}
-
-	defer r.client.Close()
-
-	responseCode, err := spamhaus.Lookup(toUpdate.IPAddress)
+	responseCode, err := r.BlocklistClient.Lookup(toUpdate.IPAddress)
 	if err != nil {
 		return nil, err
 	}
@@ -157,7 +133,7 @@ func (r *Resolver) updateToDB(toUpdate model.IPDetails) (*model.IPDetails, error
 	updated.ResponseCode = responseCode
 	updated.UpdatedAt = time.Now()
 
-	result, err := r.client.UpdateIPDetails(updated)
+	result, err := r.DBClient.UpdateIPDetails(updated)
 	if err != nil {
 		return nil, err
 	}
@@ -166,8 +142,8 @@ func (r *Resolver) updateToDB(toUpdate model.IPDetails) (*model.IPDetails, error
 }
 
 // newIPLookup should be used when an IP is unknown to the system
-func newIPLookup(IP string) (*model.IPDetails, error) {
-	responseCode, err := spamhaus.Lookup(IP)
+func (r *Resolver) newIPLookup(IP string) (*model.IPDetails, error) {
+	responseCode, err := r.BlocklistClient.Lookup(IP)
 	if err != nil {
 		return nil, err
 	}

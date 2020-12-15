@@ -8,12 +8,15 @@ import (
 	"strings"
 )
 
+type Client struct {
+}
+
 // Lookup will query the Spamhaus Domain name System BlockList and return the Return Code associated with given IP.
 //
 // IP is an IPv4 formatted address to be queried in the Spamhaus system.
 //
 // The string return value is return code returned back by the Spamhaus system.
-func Lookup(IP string) ([]string, error) {
+func (c Client) Lookup(IP string) ([]string, error) {
 	if net.ParseIP(IP) == nil {
 		return nil, fmt.Errorf("%s is not a valid IPv4 address", IP)
 	}

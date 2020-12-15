@@ -26,19 +26,17 @@ In addition to "normal" local build and development, this application supports D
   application to a running Kubernetes cluster that you have previously set up. 
 
 ## Dependency Justification
-`github.com/99designs/gqlgen`
 
-This is used because the spec sheet recommends it.
-	
 `github.com/go-chi/chi`
 
-This is used because the gqlgen tutorial used it to great effect, and deviating from the recommendation of a
- recommendation seemed unwise.
+This router was chosen because it seems to integrate the best with the gqlgen framework. I had little trouble adding
+ my implementation of basic authentication, and implementing it in an idiomatic-to-gqlgen way. I liked how
+  implementing my middleware was a one and done affair.
 
 `github.com/google/uuid`
 
 UUID is one of the defined fields on the spec, and this is the most widely used UUID library and one I've used in the
- past.
+ past. It is elegant and concise and never feels lacking in any methods that you might want.
  
 
     github.com/jmoiron/sqlx
@@ -46,7 +44,3 @@ UUID is one of the defined fields on the spec, and this is the most widely used 
     
 These two libraries are what I've used in the past for handling SQLite in Go. sqlx, while an abstraction, makes
  operating with SQL of any flavor very easy and configuring it to use SQLite is just a matter of importing go-sqlite3.
-
-    github.com/vektah/gqlparser/v2
-    
-This is imported automatically by gqlgen.

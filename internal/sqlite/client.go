@@ -11,7 +11,7 @@ import (
 	"github.com/brandonforster/resolver/graph/model"
 )
 
-// Client is the atomic unit of interacting with SQLite.
+// DBClient is the atomic unit of interacting with SQLite.
 type Client struct {
 	db *sqlx.DB
 }
@@ -24,11 +24,11 @@ func (c *Client) Close() error {
 
 // NewClient creates a client and opens a connection to a database.
 // It allows for connection to arbitrarily named databases.
-// It returns a pointer to a Client object if successful; an error otherwise.
+// It returns a pointer to a DBClient object if successful; an error otherwise.
 //
 // filename is the name of the flat file where the data will be stored.
 //
-// It returns a pointer to a Client object if successful; an error otherwise.
+// It returns a pointer to a DBClient object if successful; an error otherwise.
 func NewClient(filename string) (*Client, error) {
 	sqliteDb, err := sqlx.Open("sqlite3", fmt.Sprintf("file:%s?_fk=true&_busy_timeout=5000&_journal_mode=WAL", filename))
 	if err != nil {

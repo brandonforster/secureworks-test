@@ -14,10 +14,12 @@ func TestLookup(t *testing.T) {
 		{"127.0.0.1", false, nil},
 	}
 
+	sut := Client{}
+
 	for _, tt := range testCases {
 		testname := tt.ip
 		t.Run(testname, func(t *testing.T) {
-			actual, err := Lookup(tt.ip)
+			actual, err := sut.Lookup(tt.ip)
 			if err != nil && !tt.expectedError {
 				t.Errorf("unexpected error %s", err)
 			} else if err == nil && tt.expectedError {
