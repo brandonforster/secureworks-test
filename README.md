@@ -17,7 +17,7 @@ For help using GraphQL or making queries with it, please consult your favorite s
      
 ### Alternative Deployments  
   
-In addition to "normal" local build and development, this application supports Docker and Kubernetes deployments. Simply run `make docker_build`, `make docker_run` to get started with Docker. You'll need to run `make docker_clean` between builds of the application. You can customize the port the app runs on by editing the `PORT` environment variable in the Dockerfile, but remember that you'll need to update either the `Makefile` or your run command to use the new port you specified. Run `make k8s` to deploy the application to a running Kubernetes cluster that you have previously set up.  
+In addition to "normal" local build and development, this application supports Docker deployments. Simply run `make docker_build`, `make docker_run` to get started with Docker. You'll need to run `make docker_clean` between builds of the application. You can customize the port the app runs on by editing the `PORT` environment variable in the Dockerfile, but remember that you'll need to update either the `Makefile` or your run command to use the new port you specified.  
     
 If your system doesn't have access to the program `make` you can run all the same commands yourself. Refer to the [Makefile](Makefile) and run each line of the script you'd like to use one at a time.  
   
