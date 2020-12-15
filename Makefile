@@ -16,3 +16,6 @@ docker_run:
 docker_clean:
 	docker stop resolver
 	docker rm resolver
+
+helm:
+	helm upgrade --install release helm-chart/ --values helm-chart/values.yaml
