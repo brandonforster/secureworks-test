@@ -22,8 +22,12 @@ The two primary ways of interacting with the application are the `enqueue` funct
 ### Alternative Deployments
 
 In addition to "normal" local build and development, this application supports Docker and Kubernetes deployments.
- Simply run `make docker_build`, `make docker_run` to get started with Docker and `make k8s` to deploy the
-  application to a running Kubernetes cluster that you have previously set up. 
+ Simply run `make docker_build`, `make docker_run` to get started with Docker. You'll need to run `make docker_clean
+ ` between builds of the application. Run `make k8s` to deploy the application to a running Kubernetes cluster that
+  you have previously set up.
+  
+  If your system doesn't have access to the program `make` you can run all the same commands yourself. Refer to the
+   [Makefile](Makefile) and run each line of the script you'd like to use one at a time.
 
 ## Dependency Justification
 
