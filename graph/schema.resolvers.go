@@ -13,6 +13,8 @@ import (
 	"github.com/brandonforster/resolver/internal/sqlite"
 )
 
+const FILENAME = `resolver.db`
+
 // Enqueue is designed to kick off a background job to do the DNS lookup and store it in the database for each IP
 // passed in for future lookups. If the lookup has already happened, this will queue it up again and update the
 // record in the database. It returns an array of records stored in the database if successful, an error otherwise.

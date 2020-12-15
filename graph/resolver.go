@@ -13,8 +13,6 @@ import (
 	"github.com/brandonforster/resolver/internal/interfaces"
 )
 
-const FILENAME = `resolver.db`
-
 type Resolver struct {
 	DBClient        interfaces.DBClient
 	BlocklistClient interfaces.BlocklistClient
