@@ -8,5 +8,6 @@ require (
 	github.com/google/uuid v1.1.2
 	github.com/jmoiron/sqlx v1.2.0
 	github.com/mattn/go-sqlite3 v1.14.5
-	github.com/vektah/gqlparser/v2 v2.1.0
+	github.com/vektah/gqlparser/v2 v2.5.14
+	google.golang.org/appengine v1.6.8 // indirect
 )
